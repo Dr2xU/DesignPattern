@@ -9,10 +9,6 @@ target/
 # Node
 node_modules/
 
-# Ignore all test-generated artifacts
-**/src/test/**/*
-!**/src/test/**/*.java
-
 # Test output files
 *.csv
 *.json
