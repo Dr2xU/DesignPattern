@@ -4,7 +4,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -23,6 +25,8 @@ class MainTest {
 
     private Path tempJson;
     private Path tempCsv;
+    private final PrintStream standardOut = System.out;
+    private ByteArrayOutputStream outputStreamCaptor;
 
     /**
      * Sets up temporary JSON and CSV file paths before each test and ensures they are clean.
@@ -33,6 +37,18 @@ class MainTest {
         tempCsv = tempDir.resolve("test-grocery.csv");
         Files.deleteIfExists(tempJson);
         Files.deleteIfExists(tempCsv);
+        
+        // Set up output capture for testing display methods
+        outputStreamCaptor = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStreamCaptor));
+    }
+    
+    /**
+     * Clean up after tests
+     */
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        System.setOut(standardOut);
     }
 
     /**
@@ -112,5 +128,35 @@ class MainTest {
         var lines = Files.readAllLines(tempCsv);
         assertThat(lines.get(0)).isEqualTo("Item,Quantity,Category");
         assertThat(lines).anyMatch(line -> line.startsWith("Milk,1"));
+    }
+    
+    /**
+     * Should return 0 when 'info' command is executed and display system information.
+     */
+    @Test
+    void should_return_0_when_info_command_executed() throws IOException {
+        int result = Main.exec(new String[]{"info"});
+        
+        assertThat(result).isEqualTo(0);
+        String output = outputStreamCaptor.toString().trim();
+        
+        assertThat(output).contains("Today's date:");
+        assertThat(output).contains("Operating System:");
+        assertThat(output).contains("Java version:");
+    }
+    
+    /**
+     * Should return 0 when 'info' command is executed even with source option.
+     */
+    @Test
+    void should_return_0_when_info_command_executed_with_source() throws IOException {
+        int result = Main.exec(new String[]{"-s", tempJson.toString(), "info"});
+        
+        assertThat(result).isEqualTo(0);
+        String output = outputStreamCaptor.toString().trim();
+        
+        assertThat(output).contains("Today's date:");
+        assertThat(output).contains("Operating System:");
+        assertThat(output).contains("Java version:");
     }
 }

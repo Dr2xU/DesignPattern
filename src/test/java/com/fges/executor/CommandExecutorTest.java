@@ -4,8 +4,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Path;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
@@ -17,11 +21,14 @@ import static org.assertj.core.api.Assertions.*;
 class CommandExecutorTest {
 
     private CommandExecutor executor;
+    private CommandExecutor infoExecutor;
 
     @TempDir
     Path tempDir;
 
     private Path testFile;
+    private final PrintStream standardOut = System.out;
+    private ByteArrayOutputStream outputStreamCaptor;
 
     /**
      * Sets up a temporary test JSON file and initializes the CommandExecutor.
@@ -30,6 +37,19 @@ class CommandExecutorTest {
     void setUp() throws IOException {
         testFile = tempDir.resolve("test-executor.json");
         executor = new CommandExecutor(testFile.toString(), "json", "dairy");
+        infoExecutor = new CommandExecutor("dummy-file.json", "json", "info");
+        
+        // Set up output capture for testing display methods
+        outputStreamCaptor = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStreamCaptor));
+    }
+
+    /**
+     * Clean up after tests
+     */
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        System.setOut(standardOut);
     }
 
     /**
@@ -126,5 +146,30 @@ class CommandExecutorTest {
             "# dairy:",
             "Milk: 3"
         );
+    }
+    
+    /**
+     * Verifies successful execution of the "info" command.
+     */
+    @Test
+    void should_display_system_info_when_info_command_executed() throws IOException {
+        int result = infoExecutor.execute("info", List.of("info"));
+        
+        assertThat(result).isEqualTo(0);
+        String output = outputStreamCaptor.toString().trim();
+        
+        String expectedDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        assertThat(output).contains("Today's date: " + expectedDate);
+        assertThat(output).contains("Operating System: ");
+        assertThat(output).contains("Java version: ");
+    }
+    
+    /**
+     * Verifies that other commands fail when using an info-only executor.
+     */
+    @Test
+    void should_fail_when_using_normal_commands_with_info_executor() {
+        assertThatThrownBy(() -> infoExecutor.execute("add", List.of("add", "Milk", "3")))
+                .isInstanceOf(IllegalStateException.class);
     }
 }

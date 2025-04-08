@@ -1,7 +1,9 @@
 package com.fges.executor;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Date;
 
 import com.fges.core.GroceryListManager;
 import com.fges.dao.CsvGroceryListDAO;
@@ -9,7 +11,7 @@ import com.fges.dao.GroceryListDAO;
 import com.fges.dao.JsonGroceryListDAO;
 
 /**
- * Handles the execution of grocery list commands such as add, list, and remove.
+ * Handles the execution of grocery list commands such as add, list, remove, and info.
  * Uses a specific data access strategy (JSON or CSV) and supports categorization.
  */
 public class CommandExecutor {
@@ -29,8 +31,14 @@ public class CommandExecutor {
      * @throws IOException if the file cannot be read or created
      */
     public CommandExecutor(String fileName, String format, String category) throws IOException {
-        GroceryListDAO dao;
+        this.category = category;
+        
+        if ("info".equalsIgnoreCase(category)) {
+            this.manager = null;
+            return;
+        }
 
+        GroceryListDAO dao;
         if ("csv".equalsIgnoreCase(format)) {
             dao = new CsvGroceryListDAO(fileName);
         } else {
@@ -38,18 +46,25 @@ public class CommandExecutor {
         }
 
         this.manager = new GroceryListManager(dao);
-        this.category = category;
     }
 
     /**
      * Executes the specified command with provided arguments.
      *
-     * @param command the command to execute ("add", "list", "remove")
+     * @param command the command to execute ("add", "list", "remove", "info")
      * @param args    the arguments associated with the command
      * @return 0 if successful, or an error code
      * @throws IOException if an I/O error occurs during execution
      */
     public int execute(String command, List<String> args) throws IOException {
+        if ("info".equalsIgnoreCase(command)) {
+            return displayInfo();
+        }
+        
+        if (manager == null) {
+            throw new IllegalStateException("No grocery list manager available for command: " + command);
+        }
+        
         return switch (command) {
             case "add" -> addItem(args);
             case "list" -> listItems();
@@ -114,6 +129,23 @@ public class CommandExecutor {
 
         String itemName = args.get(1);
         manager.removeItem(itemName);
+        return 0;
+    }
+
+    /**
+     * Display system information.
+     *
+     * @return 0 if successful
+     */
+    private int displayInfo() {
+        String osName = System.getProperty("os.name");
+        String javaVersion = System.getProperty("java.version");
+        String currentDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+
+        System.out.println("Today's date: " + currentDate);
+        System.out.println("Operating System: " + osName);
+        System.out.println("Java version: " + javaVersion);
+
         return 0;
     }
 }

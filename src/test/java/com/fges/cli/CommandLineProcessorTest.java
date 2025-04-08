@@ -1,6 +1,5 @@
 package com.fges.cli;
 
-import org.apache.commons.cli.ParseException;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.*;
@@ -59,7 +58,7 @@ class CommandLineProcessorTest {
     void should_throw_when_source_option_is_missing() {
         String[] rawArgs = {"add", "Milk", "2"};
         assertThatThrownBy(() -> new CommandLineProcessor().parseArgs(rawArgs))
-                .isInstanceOf(ParseException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     /**
@@ -71,5 +70,34 @@ class CommandLineProcessorTest {
         assertThatThrownBy(() -> new CommandLineProcessor().parseArgs(rawArgs))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Missing Command");
+    }
+    
+    /**
+     * Verifies parsing of the "info" command which doesn't require a source file.
+     */
+    @Test
+    void should_parse_info_command_with_no_source() throws Exception {
+        String[] rawArgs = {"info"};
+        CommandLineArgs parsedArgs = new CommandLineProcessor().parseArgs(rawArgs);
+
+        assertThat(parsedArgs.getFileName()).isEqualTo("dummy-file.json");
+        assertThat(parsedArgs.getFormat()).isEqualTo("json");
+        assertThat(parsedArgs.getCategory()).isEqualTo("info");
+        assertThat(parsedArgs.getCommand()).isEqualTo("info");
+        assertThat(parsedArgs.getArguments()).containsExactly("info");
+    }
+    
+    /**
+     * Verifies that the "info" command ignores provided options.
+     */
+    @Test
+    void should_ignore_options_when_info_command_used() throws Exception {
+        String[] rawArgs = {"-s", "groceries.json", "-f", "csv", "-c", "dairy", "info"};
+        CommandLineArgs parsedArgs = new CommandLineProcessor().parseArgs(rawArgs);
+
+        assertThat(parsedArgs.getCommand()).isEqualTo("info");
+        assertThat(parsedArgs.getCategory()).isEqualTo("info");
+        assertThat(parsedArgs.getFileName()).isEqualTo("dummy-file.json");
+        assertThat(parsedArgs.getFormat()).isEqualTo("json");
     }
 }
