@@ -48,13 +48,13 @@ It is a command line application.
 If you are not familiar with CLI applications, you need to know a few things:
 
 - Application starts with stdout, stderr and stdin
-    - stderr: to log things for debug purpose
-    - stdout: to output something
-    - stdin: to communicate with the application while it is running
+  - stderr: to log things for debug purpose
+  - stdout: to output something
+  - stdin: to communicate with the application while it is running
 - Application can be ran with arguments (see 1000's of examples on the internet)
 - Application terminated with a status code
-    - 0 for success
-    - anything else for failure
+  - 0 for success
+  - anything else for failure
 
 ## Available commands at start
 
@@ -98,6 +98,24 @@ java -jar ./target/dp-2024-2025__grocery-list-1.0-SNAPSHOT.jar -s groceries.json
 java -jar ./target/dp-2024-2025__grocery-list-1.0-SNAPSHOT.jar -s groceries.json remove "Milk"
 ```
 
+### Show system info (date, OS, Java version)
+
+```bash
+java -jar ./target/dp-2024-2025__grocery-list-1.0-SNAPSHOT.jar info
+```
+
+### Launch the web UI on default port (8080)
+
+```bash
+java -jar ./target/dp-2024-2025__grocery-list-1.0-SNAPSHOT.jar -s groceries.json web
+```
+
+### Launch the web UI on a specific port (e.g., 8081)
+
+```bash
+java -jar ./target/dp-2024-2025__grocery-list-1.0-SNAPSHOT.jar -s groceries.json web 8081
+```
+
 ## About reports
 
 Between **EACH** class there will be new things to add or change in the project.
@@ -129,7 +147,7 @@ Anything submitted after the deadline will not be considered, unless you email m
 
 ## Contact me if you have any questions
 
-**Email:** quereantho+fges@gmail.com
+**Email:** <quereantho+fges@gmail.com>
 
 ---
 Do not stay stuck on something, ask for help! I don't bite 😉

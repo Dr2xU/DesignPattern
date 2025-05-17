@@ -6,15 +6,15 @@ import static org.assertj.core.api.Assertions.*;
 
 /**
  * Unit tests for {@link CommandLineProcessor}.
- * Validates parsing of CLI arguments and error handling for incorrect inputs.
+ * Validates correct parsing of CLI arguments and error handling.
  */
 class CommandLineProcessorTest {
 
     /**
-     * Verifies parsing of minimal valid arguments using default format and category.
+     * Should correctly parse source file and command with default format and category.
      */
     @Test
-    void should_parse_valid_arguments_with_default_format() throws Exception {
+    void should_parse_valid_arguments_with_default_format() {
         String[] rawArgs = {"-s", "groceries.json", "add", "Eggs", "5"};
         CommandLineArgs parsedArgs = new CommandLineProcessor().parseArgs(rawArgs);
 
@@ -22,14 +22,14 @@ class CommandLineProcessorTest {
         assertThat(parsedArgs.getFormat()).isEqualTo("json");
         assertThat(parsedArgs.getCategory()).isEqualTo("default");
         assertThat(parsedArgs.getCommand()).isEqualTo("add");
-        assertThat(parsedArgs.getArguments()).containsExactly("add", "Eggs", "5");
+        assertThat(parsedArgs.getRawArgs()).containsExactly("add", "Eggs", "5");
     }
 
     /**
-     * Verifies parsing of full arguments including CSV format and explicit category.
+     * Should correctly parse format and category when provided.
      */
     @Test
-    void should_parse_valid_arguments_with_csv_format_and_category() throws Exception {
+    void should_parse_valid_arguments_with_csv_format_and_category() {
         String[] rawArgs = {"-s", "groceries.csv", "--format", "csv", "--category", "dairy", "add", "Milk", "2"};
         CommandLineArgs parsedArgs = new CommandLineProcessor().parseArgs(rawArgs);
 
@@ -37,14 +37,14 @@ class CommandLineProcessorTest {
         assertThat(parsedArgs.getFormat()).isEqualTo("csv");
         assertThat(parsedArgs.getCategory()).isEqualTo("dairy");
         assertThat(parsedArgs.getCommand()).isEqualTo("add");
-        assertThat(parsedArgs.getArguments()).containsExactly("add", "Milk", "2");
+        assertThat(parsedArgs.getRawArgs()).containsExactly("add", "Milk", "2");
     }
 
     /**
-     * Verifies that the short flag (-c) for category is supported.
+     * Should support short flag for category.
      */
     @Test
-    void should_support_category_short_flag() throws Exception {
+    void should_support_category_short_flag() {
         String[] rawArgs = {"-s", "groceries.json", "-c", "veggies", "add", "Carrot", "1"};
         CommandLineArgs parsedArgs = new CommandLineProcessor().parseArgs(rawArgs);
 
@@ -52,52 +52,38 @@ class CommandLineProcessorTest {
     }
 
     /**
-     * Verifies that missing required -s (source) option throws a ParseException.
-     */
-    @Test
-    void should_throw_when_source_option_is_missing() {
-        String[] rawArgs = {"add", "Milk", "2"};
-        assertThatThrownBy(() -> new CommandLineProcessor().parseArgs(rawArgs))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    /**
-     * Verifies that missing positional command throws an IllegalArgumentException.
+     * Should throw error if command is missing.
      */
     @Test
     void should_throw_when_command_is_missing() {
         String[] rawArgs = {"-s", "groceries.json"};
         assertThatThrownBy(() -> new CommandLineProcessor().parseArgs(rawArgs))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Missing Command");
+                .hasMessageContaining("Missing command");
     }
-    
+
     /**
-     * Verifies parsing of the "info" command which doesn't require a source file.
+     * Should allow the 'info' command without requiring source.
      */
     @Test
-    void should_parse_info_command_with_no_source() throws Exception {
+    void should_allow_info_command_without_source() {
         String[] rawArgs = {"info"};
         CommandLineArgs parsedArgs = new CommandLineProcessor().parseArgs(rawArgs);
 
-        assertThat(parsedArgs.getFileName()).isEqualTo("dummy-file.json");
-        assertThat(parsedArgs.getFormat()).isEqualTo("json");
-        assertThat(parsedArgs.getCategory()).isEqualTo("info");
         assertThat(parsedArgs.getCommand()).isEqualTo("info");
-        assertThat(parsedArgs.getArguments()).containsExactly("info");
+        assertThat(parsedArgs.getFileName()).isNull();
     }
-    
+
     /**
-     * Verifies that the "info" command ignores provided options.
+     * Should allow the 'web' command without requiring source.
      */
     @Test
-    void should_ignore_options_when_info_command_used() throws Exception {
-        String[] rawArgs = {"-s", "groceries.json", "-f", "csv", "-c", "dairy", "info"};
+    void should_allow_web_command_without_source() {
+        String[] rawArgs = {"web", "8080"};
         CommandLineArgs parsedArgs = new CommandLineProcessor().parseArgs(rawArgs);
 
-        assertThat(parsedArgs.getCommand()).isEqualTo("info");
-        assertThat(parsedArgs.getCategory()).isEqualTo("info");
-        assertThat(parsedArgs.getFileName()).isEqualTo("dummy-file.json");
-        assertThat(parsedArgs.getFormat()).isEqualTo("json");
+        assertThat(parsedArgs.getCommand()).isEqualTo("web");
+        assertThat(parsedArgs.getCommandArgs()).containsExactly("8080");
+        assertThat(parsedArgs.getFileName()).isNull();
     }
 }

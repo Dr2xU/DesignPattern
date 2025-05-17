@@ -27,6 +27,10 @@ public class JsonGroceryListDAO implements GroceryListDAO {
      * @param fileName the name of the JSON file to read/write grocery data
      */
     public JsonGroceryListDAO(String fileName) {
+        if (fileName == null || fileName.isBlank()) {
+            throw new IllegalArgumentException("JSON file name must not be null or empty.");
+        }
+
         this.file = new File(fileName);
     }
 
@@ -40,6 +44,11 @@ public class JsonGroceryListDAO implements GroceryListDAO {
     public List<GroceryItem> load() throws IOException {
         if (!file.exists()) {
             LOGGER.info("JSON file does not exist. Returning empty grocery list.");
+            return new ArrayList<>();
+        }
+
+        if (file.length() == 0) {
+            LOGGER.warning("JSON file is empty. Returning empty grocery list: " + file.getAbsolutePath());
             return new ArrayList<>();
         }
 
@@ -59,9 +68,17 @@ public class JsonGroceryListDAO implements GroceryListDAO {
      */
     @Override
     public void save(List<GroceryItem> items) throws IOException {
+        for (GroceryItem item : items) {
+            item.validate();
+        }
+
         try {
+            if (!file.exists() && file.createNewFile()) {
+                LOGGER.info("Created new JSON file: " + file.getAbsolutePath());
+            }
+
             mapper.writeValue(file, items);
-            LOGGER.info("Successfully saved grocery list to JSON file: " + file.getName());
+            LOGGER.info("Grocery list saved to: " + file.getAbsolutePath());
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Failed to save grocery list to JSON file: " + file.getName(), e);
             throw e;

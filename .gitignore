@@ -1,3 +1,7 @@
+# ========================
+# Build & Dependency Files
+# ========================
+
 # Maven
 target/
 !**/src/main/**/target/
@@ -9,12 +13,15 @@ target/
 # Node
 node_modules/
 
-# Test output files
-*.csv
-*.json
-test-*.*
-*.tmp
-*.log
+# Gradle
+.gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# ========================
+# IDE & Editor Settings
+# ========================
 
 # IntelliJ IDEA
 .idea/
@@ -41,12 +48,30 @@ test-*.*
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
 # VS Code
 .vscode/
 
+# ========================
+# System & OS
+# ========================
+
 # macOS
 .DS_Store
+
+# ========================
+# Runtime & Temp Files
+# ========================
+
+# Test or runtime data
+*.csv
+*.json
+test-*.*         # e.g., test-grocery.json, test-output.json
+*.tmp
+*.log
+
+# Dev storage files
+grocery.json
+*.bak
+*.old
+*.swp

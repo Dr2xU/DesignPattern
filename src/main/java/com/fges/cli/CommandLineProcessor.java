@@ -8,51 +8,43 @@ import java.util.List;
  * Responsible for parsing command-line arguments using Apache Commons CLI.
  * This class extracts and validates the required input arguments for the grocery list application.
  * Supported arguments:
- *     -s or --source (required except for "info"): the source file name
+ *     -s or --source (required except for "info" and "web")
  *     -f or --format (optional): file format (json or csv)
  *     -c or --category (optional): item category (defaults to "default")
- *     info (no arguments): Displays system information (date, OS, Java version)
  */
 public class CommandLineProcessor {
 
     /**
      * Parses command-line arguments including required options: source (-s),
-     * optional format (-f), and category (-c). It also handles the 'info' command.
+     * optional format (-f), and category (-c). It also handles 'info' and 'web'
+     * as special commands that do not require a source file.
      *
      * @param args the raw command-line arguments
      * @return a {@link CommandLineArgs} object containing the parsed values
-     * @throws ParseException           if required options are missing or malformed
-     * @throws IllegalArgumentException if no positional command is provided
+     * @throws IllegalArgumentException if required options are missing or malformed
      */
-    public CommandLineArgs parseArgs(String[] args) throws ParseException {
-        Options cliOptions = new Options();
-    
-        cliOptions.addOption("s", "source", true, "File containing the grocery list");
-        cliOptions.addOption("f", "format", true, "Format of the grocery list file (json or csv)");
-        cliOptions.addOption("c", "category", true, "Category of the grocery item");
-    
+    public CommandLineArgs parseArgs(String[] args) {
+        Options options = new Options();
+        options.addOption("s", "source", true, "Source file (required for most commands)");
+        options.addOption("f", "format", true, "Data format: json/csv");
+        options.addOption("c", "category", true, "Optional category");
+
         CommandLineParser parser = new DefaultParser();
-        CommandLine cmd = parser.parse(cliOptions, args);
-    
-        List<String> positionalArgs = cmd.getArgList();
-        if (positionalArgs.isEmpty()) {
-            throw new IllegalArgumentException("Missing Command");
+        try {
+            CommandLine cmd = parser.parse(options, args);
+            List<String> remainingArgs = cmd.getArgList();
+
+            if (remainingArgs.isEmpty()) {
+                throw new IllegalArgumentException("Missing command (add/list/remove/info/web)");
+            }
+
+            String source = cmd.getOptionValue("s");
+            String format = cmd.getOptionValue("f", "json");
+            String category = cmd.getOptionValue("c", "default");
+
+            return new CommandLineArgs(source, format, category, remainingArgs);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Failed to parse CLI arguments", e);
         }
-        
-        String command = positionalArgs.get(0);
-        
-        if ("info".equalsIgnoreCase(command)) {
-            return new CommandLineArgs("dummy-file.json", "json", "info", positionalArgs);
-        }
-        
-        String fileName = cmd.getOptionValue("s");
-        if (fileName == null) {
-            throw new IllegalArgumentException("Missing required option: source (-s)");
-        }
-        
-        String format = cmd.getOptionValue("f", "json").toLowerCase();
-        String category = cmd.getOptionValue("c", "default");
-    
-        return new CommandLineArgs(fileName, format, category, positionalArgs);
     }
 }

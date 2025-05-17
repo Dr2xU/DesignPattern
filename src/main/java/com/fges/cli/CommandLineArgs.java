@@ -1,9 +1,10 @@
 package com.fges.cli;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
- * Data class that encapsulates parsed command-line arguments.
+ * Immutable data class that encapsulates parsed command-line arguments.
  * This class provides access to the input file name, format (json/csv),
  * optional category, and command with its associated parameters.
  */
@@ -36,38 +37,33 @@ public class CommandLineArgs {
         this.arguments = arguments;
     }
 
-    /**
-     * @return the source file name
-     */
+    /** @return the source file name */
     public String getFileName() {
         return fileName;
     }
 
-    /**
-     * @return the specified format (e.g., "json", "csv")
-     */
+    /** @return the specified format (e.g., "json", "csv") */
     public String getFormat() {
         return format;
     }
 
-    /**
-     * @return the item category (e.g., "dairy", "default")
-     */
+    /** @return the item category (e.g., "dairy", "default") */
     public String getCategory() {
         return category;
     }
 
-    /**
-     * @return the command name (first argument in the list)
-     */
+    /** @return the command name (first argument in the list) */
     public String getCommand() {
-        return arguments.get(0);
+        return arguments.isEmpty() ? "" : arguments.get(0);
     }
 
-    /**
-     * @return all positional arguments, including the command and its parameters
-     */
-    public List<String> getArguments() {
+    /** @return the command-specific arguments (excluding the command itself) */
+    public List<String> getCommandArgs() {
+        return arguments.size() <= 1 ? Collections.emptyList() : arguments.subList(1, arguments.size());
+    }
+
+    /** @return the full positional argument list, including the command */
+    public List<String> getRawArgs() {
         return arguments;
     }
 }

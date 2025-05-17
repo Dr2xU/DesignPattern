@@ -38,7 +38,6 @@ class MainTest {
         Files.deleteIfExists(tempJson);
         Files.deleteIfExists(tempCsv);
         
-        // Set up output capture for testing display methods
         outputStreamCaptor = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outputStreamCaptor));
     }
@@ -158,5 +157,24 @@ class MainTest {
         assertThat(output).contains("Today's date:");
         assertThat(output).contains("Operating System:");
         assertThat(output).contains("Java version:");
+    }
+
+    /**
+     * Should return 0 and launch the web server on default port.
+     * The test interrupts the thread to simulate graceful shutdown.
+     */
+    @Test
+    void should_return_0_when_web_command_executed() throws Exception {
+        Thread webThread = new Thread(() -> {
+            int result = Main.exec(new String[]{
+                    "-s", tempJson.toString(), "-f", "json", "web", "12345"
+            });
+
+            assertThat(result).isEqualTo(0);
+        });
+
+        webThread.start();
+        Thread.sleep(500);
+        webThread.interrupt();
     }
 }

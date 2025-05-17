@@ -1,151 +1,35 @@
 package com.fges.executor;
 
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.Date;
-
-import com.fges.core.GroceryListManager;
-import com.fges.dao.CsvGroceryListDAO;
-import com.fges.dao.GroceryListDAO;
-import com.fges.dao.JsonGroceryListDAO;
+import com.fges.cli.CommandLineArgs;
+import com.fges.executor.commands.Command;
 
 /**
- * Handles the execution of grocery list commands such as add, list, remove, and info.
- * Uses a specific data access strategy (JSON or CSV) and supports categorization.
+ * CommandExecutor class that handles execution of CLI commands.
+ * It delegates creation to {@link CommandFactory}.
  */
 public class CommandExecutor {
 
-    /** The grocery list manager responsible for item operations */
-    private final GroceryListManager manager;
-
-    /** The category to associate with added items */
-    private final String category;
+    private final CommandLineArgs cliArgs;
 
     /**
-     * Constructs a CommandExecutor with the given file format, source, and category.
-     *
-     * @param fileName the grocery list file name
-     * @param format   the file format (json or csv)
-     * @param category the item category for added items
-     * @throws IOException if the file cannot be read or created
+     * Constructs a CommandExecutor with parsed command-line arguments.
+     * @param cliArgs the fully parsed command-line arguments object
      */
-    public CommandExecutor(String fileName, String format, String category) throws IOException {
-        this.category = category;
-        
-        if ("info".equalsIgnoreCase(category)) {
-            this.manager = null;
-            return;
+    public CommandExecutor(CommandLineArgs cliArgs) {
+        if (cliArgs == null) {
+            throw new IllegalArgumentException("CommandLineArgs must not be null.");
         }
-
-        GroceryListDAO dao;
-        if ("csv".equalsIgnoreCase(format)) {
-            dao = new CsvGroceryListDAO(fileName);
-        } else {
-            dao = new JsonGroceryListDAO(fileName);
-        }
-
-        this.manager = new GroceryListManager(dao);
+        this.cliArgs = cliArgs;
     }
 
     /**
-     * Executes the specified command with provided arguments.
+     * Executes the appropriate command and returns an exit code.
      *
-     * @param command the command to execute ("add", "list", "remove", "info")
-     * @param args    the arguments associated with the command
-     * @return 0 if successful, or an error code
-     * @throws IOException if an I/O error occurs during execution
+     * @return 0 on success, non-zero on failure
+     * @throws Exception if the command fails
      */
-    public int execute(String command, List<String> args) throws IOException {
-        if ("info".equalsIgnoreCase(command)) {
-            return displayInfo();
-        }
-        
-        if (manager == null) {
-            throw new IllegalStateException("No grocery list manager available for command: " + command);
-        }
-        
-        return switch (command) {
-            case "add" -> addItem(args);
-            case "list" -> listItems();
-            case "remove" -> removeItem(args);
-            default -> throw new IllegalArgumentException("Unknown command: " + command);
-        };
-    }
-
-    /**
-     * @return the manager used for list operations (mainly for testing)
-     */
-    public GroceryListManager getManager() {
-        return manager;
-    }
-
-    /**
-     * Adds an item to the grocery list with a quantity and category.
-     *
-     * @param args the arguments for the add command
-     * @return 0 if successful
-     * @throws IOException if saving the item fails
-     */
-    private int addItem(List<String> args) throws IOException {
-        if (args.size() < 3) {
-            throw new IllegalArgumentException("Missing arguments for 'add' command");
-        }
-
-        String itemName = args.get(1);
-        int quantity;
-
-        try {
-            quantity = Integer.parseInt(args.get(2));
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Quantity must be a number");
-        }
-
-        manager.addItem(itemName, quantity, category);
-        return 0;
-    }
-
-    /**
-     * Lists all items grouped by category and prints them to the console.
-     *
-     * @return 0 if successful
-     */
-    private int listItems() {
-        manager.listItems().forEach(System.out::println);
-        return 0;
-    }
-
-    /**
-     * Removes an item from the grocery list.
-     *
-     * @param args the arguments for the remove command
-     * @return 0 if successful
-     * @throws IOException if saving changes fails
-     */
-    private int removeItem(List<String> args) throws IOException {
-        if (args.size() < 2) {
-            throw new IllegalArgumentException("Missing arguments for 'remove' command");
-        }
-
-        String itemName = args.get(1);
-        manager.removeItem(itemName);
-        return 0;
-    }
-
-    /**
-     * Display system information.
-     *
-     * @return 0 if successful
-     */
-    private int displayInfo() {
-        String osName = System.getProperty("os.name");
-        String javaVersion = System.getProperty("java.version");
-        String currentDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-
-        System.out.println("Today's date: " + currentDate);
-        System.out.println("Operating System: " + osName);
-        System.out.println("Java version: " + javaVersion);
-
-        return 0;
+    public int execute() throws Exception {
+        Command command = CommandFactory.create(cliArgs);
+        return command.execute(cliArgs.getCommandArgs());
     }
 }
